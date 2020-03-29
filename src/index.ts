@@ -1,9 +1,7 @@
 import { Exchange } from "./classes/exchange";
 
-async function run() {
+async function main() {
     const binance = new Exchange('binance');
-    binance.initialize().then(() => {
-        console.log(binance.tickers);
-    });
+    await binance.initialize();
 }
-run();
+main();

@@ -1,7 +1,7 @@
 {
   "name": "gts-crypto-arbitrage",
   "version": "1.0.0",
-  "description": "Automates triangular(3+) arbitrage on crypto exchanges.",
+  "description": "Automates triangular arbitrage on crypto exchanges.",
   "repository": "https://bitbucket.org/keitsu42/gts-crypto-arbitrage",
   "main": "index.js",
   "scripts": {
