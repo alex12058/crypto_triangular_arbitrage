@@ -18,10 +18,15 @@ export class ChainBuilder {
         this.tickers = exchange.tickers;
     }
 
+    // TODO: Do this for each QuoteCurrency 
     async create_chains() {
         this.tickers = this.exchange.tickers;
-        const firstTicker = this.tickers.get(Array.from(this.tickers.keys())[0]);
-        if(firstTicker) console.log((await this.build_chain(firstTicker.baseCurrency)));
+        let chains: ChainNode[][] = [];
+        for(const quote of this.exchange.quoteCurrencies) {
+            const chainFromQuote = await this.build_chain(quote);
+            chains = chains.concat(chainFromQuote);
+        }
+        console.log(chains);
     }
 
     /**
