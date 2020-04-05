@@ -16,6 +16,7 @@ interface ChainBuildState {
 export class ChainBuilder {
 
 	private readonly exchange: Exchange;
+	private readonly MAX_CHAIN_LENGTH = 3;
 
 	constructor(exchange: Exchange) {
 		this.exchange = exchange;
@@ -86,7 +87,7 @@ export class ChainBuilder {
 			return !this.ticker_visited(ticker, visited)
 				&& ticker.hasCurrency(currentCurrency)
 				&& (
-					visited.length < 2
+					visited.length < this.MAX_CHAIN_LENGTH - 1
 					|| ticker.opposite(currentCurrency) === startCurrency
 				);
 	}
@@ -98,7 +99,7 @@ export class ChainBuilder {
 	private endOfChain(startCurrency: string, nextCurrency: string, 
 		chainLength: number): boolean
 	{
-		return startCurrency === nextCurrency || chainLength === 3;
+		return startCurrency === nextCurrency || chainLength === this.MAX_CHAIN_LENGTH;
 	}
 
 	private async takePaths(

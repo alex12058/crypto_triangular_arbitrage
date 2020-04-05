@@ -30,7 +30,7 @@ export class Chain {
     }
 
     private sortTickerNames(tickers: Ticker[]) {
-        return tickers.sort((a, b) => {
+        return tickers.slice().sort((a, b) => {
             const aHasQuoteBase = a.baseIsQuote();
             const bhasQuoteBase = b.baseIsQuote();
 
@@ -45,9 +45,7 @@ export class Chain {
             return a.name < b.name
                 ? -1
                 : 1;
-        }
-    
-        ).map(ticker => ticker.name);
+        }).map(ticker => ticker.name);
     }
 
     private needToReverseOrder(tickers: Ticker[], sortedTickerNames: string[],
@@ -57,8 +55,8 @@ export class Chain {
         const prevTickerIndex = prevLoopableIndex(firstTickerIndex, tickers.length);
         if (nextTickerIndex === prevTickerIndex) return false;
 
-        const nextTickerName = tickers[nextTickerIndex]!.name;
-        const prevTickerName = tickers[prevTickerIndex]!.name;
+        const nextTickerName = tickers[nextTickerIndex].name;
+        const prevTickerName = tickers[prevTickerIndex].name;
 
         // Lower number means higher priority
         const nextPriority = sortedTickerNames.indexOf(nextTickerName);
