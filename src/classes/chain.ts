@@ -6,10 +6,13 @@ import { Exchange } from "./exchange";
 export class Chain {
 
     private readonly exchange: Exchange;
+    private readonly tickers: Ticker[];
+    readonly hash: string;
 
     constructor(exchange: Exchange, chainNodes: ChainNode[]) {
         this.exchange = exchange;
-        console.log(this.getHashableOrder(chainNodes).map(t => t.name));
+        this.tickers = this.getHashableOrder(chainNodes);
+        this.hash = this.generateHash(this.tickers);
     }
 
     private getHashableOrder(chainNodes: ChainNode[]) {
@@ -61,5 +64,23 @@ export class Chain {
         const nextPriority = sortedTickerNames.indexOf(nextTickerName);
         const prevPriority = sortedTickerNames.indexOf(prevTickerName);
         return nextPriority > prevPriority;
+    }
+
+    private generateHash(tickers: Ticker[]) {
+        const firstTicker = tickers[0];
+        const secondTicker = tickers[1];
+        const firstCurrency = [
+            firstTicker.baseCurrency,
+            firstTicker.quoteCurrency
+        ].find(currency => {
+            return secondTicker.hasCurrency(currency);
+        })!;
+        let lastCurrency = firstCurrency;
+        const currencyOrder: string[] = [ firstCurrency ];
+        for(let i = 1; i < tickers.length; i++) {
+            const nextCurrency = tickers[i].opposite(lastCurrency);
+            currencyOrder.push(lastCurrency = nextCurrency);
+        }
+        return currencyOrder.join('/');
     }
 }

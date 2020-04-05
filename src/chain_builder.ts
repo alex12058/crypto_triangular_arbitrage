@@ -22,8 +22,15 @@ export class ChainBuilder {
 	}
 
 	async createChains() {
-		const chains_from_quotes = await this.buildChainsFromQuotes();
-		chains_from_quotes.slice(0, 100).forEach(chain => new Chain(this.exchange, chain));
+		const chainsFromQuotes = await this.buildChainsFromQuotes();
+		const chainMap = new Map<string, Chain>();
+		chainsFromQuotes.forEach(primativeChain => {
+			const chain = new Chain(this.exchange, primativeChain);
+			if(chainMap.get(chain.hash) === undefined) {
+				chainMap.set(chain.hash, chain);
+			}
+		});
+		return chainMap;
 	}
 
 	async buildChainsFromQuotes(): Promise<ChainNode[][]> {

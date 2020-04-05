@@ -3,13 +3,15 @@ import ccxt = require('ccxt');
 import { Ticker } from './ticker';
 import { ChainBuilder } from '../chain_builder';
 import { contains } from '../helper';
+import { Chain } from './chain';
 
 export class Exchange {
     private readonly _exchange: ccxt.Exchange;
     private readonly _tickers: Map<string, Ticker> = new Map();
     private readonly _symbols: Map<string, Symbol> = new Map();
     private readonly _chainBuilder: ChainBuilder;
-    private  _quoteCurrencies: string[] = [];
+    private _chains: Map<string, Chain> = new Map();
+    private _quoteCurrencies: string[] = [];
 
     constructor(name: string) {
         this._exchange = new (ccxt as any)[name]();
@@ -75,6 +77,7 @@ export class Exchange {
     }
 
     private async create_chains() {
-        await this._chainBuilder.createChains();
+        this._chains = await this._chainBuilder.createChains();
+        console.log(this._chains.keys());
     }
 }

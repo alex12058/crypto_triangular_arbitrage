@@ -1,6 +1,6 @@
 
 export function contains<T>(objectArray: T[], search: T): boolean {
-    return objectArray.indexOf(search) !== -1;
+    return objectArray.some(object => object === search);
 }
 
 export function reverseIndex(index: number, arrayLength: number) {
