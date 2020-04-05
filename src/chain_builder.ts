@@ -2,91 +2,139 @@ import { Ticker } from "./classes/ticker";
 import { Exchange } from "./classes/exchange";
 
 interface ChainNode {
-    ticker: Ticker;
-    tickerName: string;
-    prevCurrency: string;
-    nextCurrency: string;
+	ticker: Ticker;
+	tickerName: string;
+	prevCurrency: string;
+	nextCurrency: string;
+}
+
+interface ChainBuildState {
+	currentCurrency: string;
+	visited: ChainNode[];
 }
 
 export class ChainBuilder {
 
-    private readonly exchange: Exchange;
-    private tickers: Map<string, Ticker>;
+	private readonly exchange: Exchange;
 
-    constructor(exchange: Exchange) {
-        this.exchange = exchange;
-        this.tickers = exchange.tickers;
-    }
+	constructor(exchange: Exchange) {
+		this.exchange = exchange;
+	}
 
-    // TODO: Do this for each QuoteCurrency 
-    async create_chains() {
-        this.tickers = this.exchange.tickers;
-        let chains: ChainNode[][] = [];
-        for(const quote of this.exchange.quoteCurrencies) {
-            const chainFromQuote = await this.build_chain(quote);
-            chains = chains.concat(chainFromQuote);
-        }
-        console.log(chains);
-    }
+	async create_chains() {
+		const chains_from_quotes = await this.build_chains_from_quotes();
+		console.log(chains_from_quotes);
+	}
 
-    /**
-     * 
-     * @param startCurrency Currency the chain starts from
-     * @param currentCurrency Currency the chain is currently at
-     * @param visited List of visited nodes in the chain
-     */
-    private async build_chain(
-        startCurrency: string, 
-        currentCurrency: string = startCurrency, 
-        visited: ChainNode[] = []
-    ): Promise<ChainNode[][]> {
-        const possibleTickers: string[] = [];
-        for(const key of Array.from(this.tickers.keys())) {
-            // Ticker already visited
-            if(visited.some(visited => visited.tickerName === key)) continue;
+	async build_chains_from_quotes(): Promise<ChainNode[][]> {
+		const tickers = this.exchange.tickers;
+		return Promise.all(
+			this.exchange.quoteCurrencies.map(quote => {
+				return this.build_chain(quote, tickers);
+			})
+		).then(createdChains => this.concat_chains(createdChains));
+	}
 
-            // No way to connect to ticker
-            const ticker = this.tickers.get(key);
-            if(!ticker) continue;
-            if(!ticker.has_currency(currentCurrency)) continue;
+	private async build_chain(
+		startCurrency: string,
+		tickers: Map<string, Ticker>,
+		chainBuildState: ChainBuildState = {
+			currentCurrency: startCurrency,
+			visited: []
+		}
+	): Promise<ChainNode[][]> {
+		return Promise.all(
+			this.get_possible_links(startCurrency, tickers, chainBuildState)
+				.map(ticker => {
+					return this.take_paths(
+						ticker,
+						startCurrency,
+						tickers,
+						chainBuildState
+					);
+				})
+		).then(createdChains => this.concat_chains(createdChains));
+	}
 
-            // Must connect back to startCurrency if this will be the last (3rd) node
-            if(visited.length < 2 || ticker.opposite(currentCurrency) === startCurrency) {
-                possibleTickers.push(key);
-            }
-        }
+	private get_possible_links(
+		startCurrency: string,
+		tickers: Map<string, Ticker>,
+		chainBuildState: ChainBuildState
+	): Ticker[] {
+		return Array.from(tickers.values()).filter(ticker => {
+			return this.ticker_is_possible_link(
+				ticker,
+				startCurrency,
+				chainBuildState
+			);
+		});
+	}
 
-        const chains: ChainNode[][] = [];
+	private ticker_is_possible_link(
+		ticker: Ticker,
+		startCurrency: string,
+		chainBuildState: ChainBuildState): boolean
+	{
+		const { currentCurrency, visited } = chainBuildState;
+			return !this.ticker_visited(ticker, visited)
+				&& ticker.has_currency(currentCurrency)
+				&& (
+					visited.length < 2
+					|| ticker.opposite(currentCurrency) === startCurrency
+				);
+	}
 
-        // Take all possible paths
-        for(const possibleTicker of possibleTickers) {
-            const ticker = this.tickers.get(possibleTicker);
-            if(!ticker) throw new Error('Ticker not found on map');
+	private ticker_visited(ticker: Ticker, visited: ChainNode[]): boolean {
+		return visited.some(visited => visited.tickerName === ticker.name);
+	}
 
-            const nextCurrency = ticker.opposite(currentCurrency);
-            const nextNode: ChainNode = {
-                ticker,
-                tickerName: possibleTicker,
-                prevCurrency: currentCurrency,
-                nextCurrency
-            };
-            const nextVisitedState = visited.slice();
-            nextVisitedState.push(nextNode);
+	private end_of_chain(startCurrency: string, nextCurrency: string, 
+		chainLength: number): boolean
+	{
+		return startCurrency === nextCurrency || chainLength === 3;
+	}
 
-            // If the chain ends here
-            if(nextCurrency === startCurrency || visited.length === 2) {
-                chains.push(nextVisitedState);
-            }
-            else {
-                // Else, continue the chain
-                const continuedChains = await this.build_chain(startCurrency, nextCurrency, nextVisitedState);
-                continuedChains.forEach(c => {
-                    if(c.length) {
-                        chains.push(c);
-                    }
-                });
-            }
-        }
-        return chains;
-    }
+	private async take_paths(
+		nextTicker: Ticker,
+		startCurrency: string,
+		tickers: Map<string, Ticker>,
+		chainBuildState: ChainBuildState
+	): Promise<ChainNode[][]> {
+		const { currentCurrency, visited } = chainBuildState;
+
+		const nextCurrency = nextTicker.opposite(currentCurrency);
+		const nextNode: ChainNode = {
+			ticker: nextTicker,
+			tickerName: nextTicker.name,
+			prevCurrency: currentCurrency,
+			nextCurrency
+		};
+		const nextVisited = visited.slice();
+		nextVisited.push(nextNode);
+
+		if(this.end_of_chain(startCurrency, nextCurrency, nextVisited.length)) {
+			return [ nextVisited ];
+		}
+		else {
+			// Else, continue the chain
+			return this.build_chain(
+				startCurrency,
+				tickers,
+				{
+					currentCurrency: nextCurrency,
+					visited: nextVisited
+				}
+			);
+		}
+	}
+
+	/**
+	 * Merge chains that were created from taking separate paths into a singular
+	 * array of chains
+	 */
+	private concat_chains(chains: ChainNode[][][]): ChainNode[][] {
+		return chains.reduce((curr, next) => {
+			return curr.concat(next);
+		}, []);
+	}
 }
