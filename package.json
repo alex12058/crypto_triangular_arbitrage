@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Automates triangular arbitrage on crypto exchanges.",
   "repository": "https://bitbucket.org/keitsu42/gts-crypto-arbitrage",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "gts check",
@@ -19,7 +19,10 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^10.0.3",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
     "gts": "^1.1.2",
     "nodemon": "^2.0.2",
     "ts-node": "^8.8.1",

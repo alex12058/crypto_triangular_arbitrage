@@ -1,7 +1,6 @@
-import { Exchange } from "./classes/exchange";
+import Exchange from './classes/exchange';
 
 async function main() {
-    const binance = new Exchange('binance');
-    await binance.initialize();
+  const binance = await new Exchange('binance').initialize();
 }
 main();
