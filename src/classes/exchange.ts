@@ -4,14 +4,16 @@ import Market from './market';
 import ChainBuilder from '../chain_builder';
 import { unique } from '../helper';
 import Chain from './chain';
+import Currency from './currency';
 
 import ccxt = require('ccxt');
-
 
 export default class Exchange {
     private readonly _exchange: ccxt.Exchange;
 
     private readonly _markets: Map<string, Market> = new Map();
+
+    private readonly _currencies: Map<string, Currency> = new Map();
 
     private readonly _chainBuilder: ChainBuilder;
 
@@ -53,24 +55,27 @@ export default class Exchange {
     }
 
     async initialize() {
-      await this.loadMarkets();
+      await this.loadMarketsAndCurrencies();
       await this.createChains();
       return this;
     }
 
-    private async loadMarkets() {
+    private async loadMarketsAndCurrencies() {
       this._markets.clear();
-      const markets = await this._exchange.loadMarkets(true);
-      Object.keys(markets).forEach((key) => {
-        this._markets.set(key, new Market(this, (markets as any)[key]));
+      await this._exchange.loadMarkets(true);
+      Object.values(this._exchange.markets).forEach((market: ccxt.Market) => {
+        this._markets.set(market.symbol, new Market(this, market));
       });
-      this.loadQuoteCurrencies();
+      Object.values(this._exchange.currencies).forEach((currency: ccxt.Currency) => {
+        this._currencies.set(currency.code, new Currency(this, currency));
+      });
+      this.determineMainQuoteCurrencies();
     }
 
     /**
      * Get a list of quote currencies from the market.
      */
-    private loadQuoteCurrencies() {
+    private determineMainQuoteCurrencies() {
       const markets = Array.from(this._markets.values());
 
       // All the currencies listed as quote currencies
@@ -87,6 +92,5 @@ export default class Exchange {
 
     private async createChains() {
       this._chains = await this._chainBuilder.createChains();
-      console.log(this._chains.keys());
     }
 }
