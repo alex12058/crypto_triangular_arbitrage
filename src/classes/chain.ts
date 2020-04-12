@@ -1,82 +1,82 @@
 import { ChainNode } from "../chain_builder";
 import { reverseIndex as calcReverseIndex, nextLoopableIndex, prevLoopableIndex, reverseIndex, changeFirstIndex, XOR } from "../helper";
-import { Ticker } from "./ticker";
+import { Market } from "./market";
 import { Exchange } from "./exchange";
 
 export class Chain {
 
     private readonly exchange: Exchange;
-    private readonly tickers: Ticker[];
+    private readonly markets: Market[];
     readonly hash: string;
 
     constructor(exchange: Exchange, chainNodes: ChainNode[]) {
         this.exchange = exchange;
-        this.tickers = this.getHashableOrder(chainNodes);
-        this.hash = this.generateHash(this.tickers);
+        this.markets = this.getHashableOrder(chainNodes);
+        this.hash = this.generateHash(this.markets);
     }
 
     private getHashableOrder(chainNodes: ChainNode[]) {
-        const tickers = chainNodes.map(link => link.ticker);
-        const sortedTickerNames = this.sortTickerNames(tickers);
-        const firstTicker = sortedTickerNames[0];
-        let firstTickerIndex = tickers.findIndex(ticker => {
-            return ticker.name === firstTicker;
+        const markets = chainNodes.map(link => link.market);
+        const sortedMarketSymbols = this.sortMarketSymbols(markets);
+        const firstMarket = sortedMarketSymbols[0];
+        let firstMarketIndex = markets.findIndex(market => {
+            return market.symbol === firstMarket;
         });
-        if(this.needToReverseOrder(tickers, sortedTickerNames, firstTickerIndex)) {
-            tickers.reverse();
-            firstTickerIndex = reverseIndex(firstTickerIndex, tickers.length);
+        if(this.needToReverseOrder(markets, sortedMarketSymbols, firstMarketIndex)) {
+            markets.reverse();
+            firstMarketIndex = reverseIndex(firstMarketIndex, markets.length);
         }
-        return changeFirstIndex(tickers, firstTickerIndex);
+        return changeFirstIndex(markets, firstMarketIndex);
     }
 
-    private sortTickerNames(tickers: Ticker[]) {
-        return tickers.slice().sort((a, b) => {
+    private sortMarketSymbols(markets: Market[]) {
+        return markets.slice().sort((a, b) => {
             const aHasQuoteBase = a.baseIsQuote();
             const bhasQuoteBase = b.baseIsQuote();
 
-            // If one ticker has a non quote base (other has a quote base)
+            // If one market has a non quote base (other has a quote base)
             // Then prioritise the one that does not have the quote base
             if(XOR(aHasQuoteBase, bhasQuoteBase)) {
                 if(bhasQuoteBase) return -1;
                 if(aHasQuoteBase) return 1;
             }
 
-            // Else compare using ticker symbol
-            return a.name < b.name
+            // Else compare using market symbol
+            return a.symbol < b.symbol
                 ? -1
                 : 1;
-        }).map(ticker => ticker.name);
+        }).map(market => market.symbol);
     }
 
-    private needToReverseOrder(tickers: Ticker[], sortedTickerNames: string[],
-        firstTickerIndex: number)
+    private needToReverseOrder(markets: Market[], sortedMarketSymbols: string[],
+        firstMarketIndex: number)
     {
-        const nextTickerIndex = nextLoopableIndex(firstTickerIndex, tickers.length);
-        const prevTickerIndex = prevLoopableIndex(firstTickerIndex, tickers.length);
-        if (nextTickerIndex === prevTickerIndex) return false;
+        const nextMarketIndex = nextLoopableIndex(firstMarketIndex, markets.length);
+        const prevMarketIndex = prevLoopableIndex(firstMarketIndex, markets.length);
+        if (nextMarketIndex === prevMarketIndex) return false;
 
-        const nextTickerName = tickers[nextTickerIndex].name;
-        const prevTickerName = tickers[prevTickerIndex].name;
+        const nextMarketName = markets[nextMarketIndex].symbol;
+        const prevMarketName = markets[prevMarketIndex].symbol;
 
         // Lower number means higher priority
-        const nextPriority = sortedTickerNames.indexOf(nextTickerName);
-        const prevPriority = sortedTickerNames.indexOf(prevTickerName);
+        const nextPriority = sortedMarketSymbols.indexOf(nextMarketName);
+        const prevPriority = sortedMarketSymbols.indexOf(prevMarketName);
         return nextPriority > prevPriority;
     }
 
-    private generateHash(tickers: Ticker[]) {
-        const firstTicker = tickers[0];
-        const secondTicker = tickers[1];
+    private generateHash(markets: Market[]) {
+        const firstMarket = markets[0];
+        const secondMarket = markets[1];
         const firstCurrency = [
-            firstTicker.baseCurrency,
-            firstTicker.quoteCurrency
+            firstMarket.baseCurrency,
+            firstMarket.quoteCurrency
         ].find(currency => {
-            return secondTicker.hasCurrency(currency);
+            return secondMarket.hasCurrency(currency);
         })!;
         let lastCurrency = firstCurrency;
         const currencyOrder: string[] = [ firstCurrency ];
-        for(let i = 1; i < tickers.length; i++) {
-            const nextCurrency = tickers[i].opposite(lastCurrency);
+        for(let i = 1; i < markets.length; i++) {
+            const nextCurrency = markets[i].opposite(lastCurrency);
             currencyOrder.push(lastCurrency = nextCurrency);
         }
         return currencyOrder.join('/');

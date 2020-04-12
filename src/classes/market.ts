@@ -3,20 +3,19 @@ import ccxt = require('ccxt');
 import { Exchange } from './exchange';
 import { contains } from '../helper';
 
-export class Ticker {
+export class Market {
     private readonly exchange: Exchange;
     readonly baseCurrency: string;
     readonly quoteCurrency: string;
-    readonly ticker: ccxt.Ticker;
-    readonly name: string;
+    readonly market: ccxt.Market;
+    readonly symbol: string;
 
-    constructor(exchange: Exchange, ticker: ccxt.Ticker) {
+    constructor(exchange: Exchange, market: ccxt.Market) {
         this.exchange = exchange;
-        const currencies = ticker.symbol.split('/'); // BTC/USD
-        this.baseCurrency = currencies[0]; // BTC
-        this.quoteCurrency = currencies[1]; // USD
-        this.ticker = ticker;
-        this.name = this.baseCurrency + '/' + this.quoteCurrency;
+        this.baseCurrency = market.base;
+        this.quoteCurrency = market.quote;
+        this.market = market;
+        this.symbol = market.symbol;
     }
 
     opposite(currency: string) {

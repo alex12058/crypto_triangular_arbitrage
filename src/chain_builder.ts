@@ -1,9 +1,9 @@
-import { Ticker } from "./classes/ticker";
+import { Market } from "./classes/market";
 import { Exchange } from "./classes/exchange";
 import { Chain } from "./classes/chain";
 
 export interface ChainNode {
-	ticker: Ticker;
+	market: Market;
 	prevCurrency: string;
 	nextCurrency: string;
 }
@@ -35,29 +35,29 @@ export class ChainBuilder {
 	}
 
 	async buildChainsFromQuotes(): Promise<ChainNode[][]> {
-		const tickers = this.exchange.tickers;
+		const markets = this.exchange.markets;
 		return Promise.all(
 			this.exchange.quoteCurrencies.map(quote => {
-				return this.buildChain(quote, tickers);
+				return this.buildChain(quote, markets);
 			})
 		).then(createdChains => this.concatChains(createdChains));
 	}
 
 	private async buildChain(
 		startCurrency: string,
-		tickers: Map<string, Ticker>,
+		markets: Map<string, Market>,
 		chainBuildState: ChainBuildState = {
 			currentCurrency: startCurrency,
 			visited: []
 		}
 	): Promise<ChainNode[][]> {
 		return Promise.all(
-			this.getPossibleLink(startCurrency, tickers, chainBuildState)
-				.map(ticker => {
+			this.getPossibleLink(startCurrency, markets, chainBuildState)
+				.map(market => {
 					return this.takePaths(
-						ticker,
+						market,
 						startCurrency,
-						tickers,
+						markets,
 						chainBuildState
 					);
 				})
@@ -66,34 +66,34 @@ export class ChainBuilder {
 
 	private getPossibleLink(
 		startCurrency: string,
-		tickers: Map<string, Ticker>,
+		markets: Map<string, Market>,
 		chainBuildState: ChainBuildState
-	): Ticker[] {
-		return Array.from(tickers.values()).filter(ticker => {
-			return this.tickerIsPossibleLink(
-				ticker,
+	): Market[] {
+		return Array.from(markets.values()).filter(market => {
+			return this.marketIsPossibleLink(
+				market,
 				startCurrency,
 				chainBuildState
 			);
 		});
 	}
 
-	private tickerIsPossibleLink(
-		ticker: Ticker,
+	private marketIsPossibleLink(
+		market: Market,
 		startCurrency: string,
 		chainBuildState: ChainBuildState): boolean
 	{
 		const { currentCurrency, visited } = chainBuildState;
-			return !this.ticker_visited(ticker, visited)
-				&& ticker.hasCurrency(currentCurrency)
+			return !this.market_visited(market, visited)
+				&& market.hasCurrency(currentCurrency)
 				&& (
 					visited.length < this.MAX_CHAIN_LENGTH - 1
-					|| ticker.opposite(currentCurrency) === startCurrency
+					|| market.opposite(currentCurrency) === startCurrency
 				);
 	}
 
-	private ticker_visited(ticker: Ticker, visited: ChainNode[]): boolean {
-		return visited.some(visited => visited.ticker.name === ticker.name);
+	private market_visited(market: Market, visited: ChainNode[]): boolean {
+		return visited.some(visited => visited.market.symbol === market.symbol);
 	}
 
 	private endOfChain(startCurrency: string, nextCurrency: string, 
@@ -103,16 +103,16 @@ export class ChainBuilder {
 	}
 
 	private async takePaths(
-		nextTicker: Ticker,
+		nextMarket: Market,
 		startCurrency: string,
-		tickers: Map<string, Ticker>,
+		markets: Map<string, Market>,
 		chainBuildState: ChainBuildState
 	): Promise<ChainNode[][]> {
 		const { currentCurrency, visited } = chainBuildState;
 
-		const nextCurrency = nextTicker.opposite(currentCurrency);
+		const nextCurrency = nextMarket.opposite(currentCurrency);
 		const nextNode: ChainNode = {
-			ticker: nextTicker,
+			market: nextMarket,
 			prevCurrency: currentCurrency,
 			nextCurrency
 		};
@@ -126,7 +126,7 @@ export class ChainBuilder {
 			// Else, continue the chain
 			return this.buildChain(
 				startCurrency,
-				tickers,
+				markets,
 				{
 					currentCurrency: nextCurrency,
 					visited: nextVisited
