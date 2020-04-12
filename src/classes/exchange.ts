@@ -47,7 +47,6 @@ export default class Exchange {
       assert(exchange.has.fetchL2OrderBook, `${name} does not have fetchL2OrderBook`);
 
       // Trade management
-      assert(exchange.has.fetchTradingFees, `${name} does not have fetchBalance()`);
       assert(exchange.has.fetchTrades, `${name} does not have fetchTrades()`);
 
       // Order management
