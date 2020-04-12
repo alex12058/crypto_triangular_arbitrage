@@ -9,7 +9,6 @@ import { assert } from 'console';
 export class Exchange {
     private readonly _exchange: ccxt.Exchange;
     private readonly _markets: Map<string, Market> = new Map();
-    private readonly _symbols: Map<string, Symbol> = new Map();
     private readonly _chainBuilder: ChainBuilder;
     private _chains: Map<string, Chain> = new Map();
     private _quoteCurrencies: string[] = [];
