@@ -49,7 +49,8 @@ export async function doAndLog(message: string, callback: () => any) {
   while (message.length + resultText.length < 48) {
     resultText = `.${resultText}`;
   }
-  process.stdout.write(`${resultText} [${time}ms]\n`);
+  const timeText = time ? `${time}ms` : '<1ms';
+  process.stdout.write(`${resultText} [${timeText}]\n`);
 }
 
 export function assert(value: any, message:string) {
