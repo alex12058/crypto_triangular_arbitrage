@@ -30,7 +30,7 @@ export default class Exchange {
     private apiKeyAdded = false;
 
     constructor(name: string) {
-      this._exchange = new (ccxt as any)[name]();
+      this._exchange = new (ccxt as any)[name]({ enableRateLimit: true });
       this.checkExchangeHasMethods();
       this._chainBuilder = new ChainBuilder(this);
     }
