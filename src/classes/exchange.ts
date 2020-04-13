@@ -146,20 +146,20 @@ export default class Exchange {
 
     private async loadOrderBooks() {
       const activeMarkets = Array.from(this._markets.values()).filter(m => m.isActive());
-      const racePromises = activeMarkets.map(market => market.initialize());
+      const promises = activeMarkets.map(market => market.initialize());
 
       // Keep track of finished promises
-      const finished = racePromises.map(promise => false);
-      for(let i = 0; i < racePromises.length; i++) {
+      const finished = promises.map(_promise => false);
+      for(let i = 0; i < promises.length; i++) {
         new Promise(async () => {
-          await racePromises[i];
+          await promises[i];
           finished[i] = true;
         });
       }
 
       while(finished.some(finishedState => !finishedState)) {
         await doAndLog('Loading order book', async() => {
-          const notCompleted = racePromises.filter((_value, index) => !finished[index]);
+          const notCompleted = promises.filter((_value, index) => !finished[index]);
           const result = await Promise.race(notCompleted);
           const completedLength = activeMarkets.length - (notCompleted.length - 1);
           return `${result.symbol} (${completedLength}/${activeMarkets.length})`;
