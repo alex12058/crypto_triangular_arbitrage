@@ -1,5 +1,7 @@
 import Exchange from "./classes/exchange";
 
+import ccxt = require('ccxt');
+
 export function contains<T>(objectArray: T[], search: T): boolean {
   return objectArray.some((object) => object === search);
 }
@@ -64,12 +66,13 @@ export function sleep(ms: number) {
 
 export async function request<T>(callback: () => Promise<T>): Promise<T> {
   let toReturn: any;
-  for(let i = 0; i < Exchange.NUM_RETRY_ATTEMPTS; i++) {
+  let lastError: any;
+  for(let i = 0; i < Exchange.NUM_RETRY_ATTEMPTS && (!lastError || lastError instanceof ccxt.NetworkError); i++) {
     await callback().then((value: any) => {
       toReturn = value;
-    }).catch(_ignore_error => {});
+    }).catch(error => lastError = error);
     if (toReturn) return toReturn;
     await sleep(Exchange.RETRY_DELAY_MS);
   }
-  throw new Error('Too many attempts');
+  throw lastError;
 }
