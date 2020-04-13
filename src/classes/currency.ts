@@ -20,10 +20,6 @@ export default class Currency {
       return this.currency.code;
     }
 
-    isActive() {
-      return (this.currency as any).active;
-    }
-
     updateBalance(balance: any) {
       this.free = balance.free;
       this.used = balance.used;

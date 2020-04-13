@@ -15,7 +15,7 @@ interface API_KEY{
 const API_KEYS = require('../api_keys.json');
 
 export default class Exchange {
-    private readonly _exchange: ccxt.Exchange;
+    readonly exchange: ccxt.Exchange;
 
     private readonly _markets: Map<string, Market> = new Map();
 
@@ -30,13 +30,13 @@ export default class Exchange {
     private apiKeyAdded = false;
 
     constructor(name: string) {
-      this._exchange = new (ccxt as any)[name]({ enableRateLimit: true });
+      this.exchange = new (ccxt as any)[name]({ enableRateLimit: true });
       this.checkExchangeHasMethods();
       this._chainBuilder = new ChainBuilder(this);
     }
 
     private checkExchangeHasMethods() {
-      const exchange = this._exchange;
+      const exchange = this.exchange;
       const { name } = exchange;
 
       // Account info
@@ -72,18 +72,19 @@ export default class Exchange {
       await this.loadMarketsAndCurrencies();
       await this.createChains();
       await this.terminateIfNoAPIKey();
+      await this.loadOrderBooks();
       await this.loadBalances();
       return this;
     }
 
     private async loadAPIKeys() {
-      const { name } = this._exchange;
+      const { name } = this.exchange;
       await doAndLog(`Retrieving API keys for ${name}`, () => {
         const APIKey: API_KEY | undefined = (API_KEYS as any)[name.toLowerCase()];
         if (APIKey) {
           assert(APIKey.apiKey !== undefined, `Invalid API Key for ${name}`);
           assert(APIKey.secret !== undefined, `Invalid API Key for ${name}`);
-          const exchange = this._exchange;
+          const exchange = this.exchange;
           exchange.apiKey = APIKey.apiKey;
           exchange.secret = APIKey.secret;
           this.apiKeyAdded = true;
@@ -98,18 +99,18 @@ export default class Exchange {
       this._markets.clear();
 
       await doAndLog('Refreshing market data', async () => {
-        await this._exchange.loadMarkets(true);
+        await this.exchange.loadMarkets(true);
       });
 
       await doAndLog('Indexing markets', () => {
-        Object.values(this._exchange.markets).forEach((market: ccxt.Market) => {
+        Object.values(this.exchange.markets).forEach((market: ccxt.Market) => {
           this._markets.set(market.symbol, new Market(this, market));
         });
         return `${this._markets.size} loaded`;
       });
 
       await doAndLog('Indexing currencies', () => {
-        Object.values(this._exchange.currencies).forEach((currency: ccxt.Currency) => {
+        Object.values(this.exchange.currencies).forEach((currency: ccxt.Currency) => {
           this._currencies.set(currency.code, new Currency(this, currency));
         });
         return `${this._currencies.size} loaded`;
@@ -132,9 +133,32 @@ export default class Exchange {
       }
     }
 
+    private async loadOrderBooks() {
+      const activeMarkets = Array.from(this._markets.values()).filter(m => m.isActive());
+      const racePromises = activeMarkets.map(market => market.initialize());
+
+      // Keep track of finished promises
+      const finished = racePromises.map(promise => false);
+      for(let i = 0; i < racePromises.length; i++) {
+        new Promise(async () => {
+          await racePromises[i];
+          finished[i] = true;
+        });
+      }
+
+      while(finished.some(finishedState => !finishedState)) {
+        await doAndLog('Loading order books', async() => {
+          const notCompleted = racePromises.filter((_value, index) => !finished[index]);
+          const result = await Promise.race(notCompleted);
+          const completedLength = activeMarkets.length - (notCompleted.length - 1);
+          return `${result.symbol} (${completedLength}/${activeMarkets.length})`;
+        });
+      }
+    }
+
     private async loadBalances() {
       await doAndLog('Loading balances', async () => {
-        const balances = await this._exchange.fetchBalance();
+        const balances = await this.exchange.fetchBalance();
         this._currencies.forEach((currency, key) => currency.updateBalance(balances[key]));
       });
     }

@@ -8,9 +8,20 @@ export default class Market {
 
     readonly market: ccxt.Market;
 
+    private orderBook!: ccxt.OrderBook;
+
     constructor(exchange: Exchange, market: ccxt.Market) {
       this.exchange = exchange;
       this.market = market;
+    }
+
+    async initialize() {
+      this.orderBook = await this.fetchOrderBook();
+      return this;
+    }
+
+    private fetchOrderBook = async() => {
+      return this.exchange.exchange.fetchL2OrderBook(this.symbol);
     }
 
     get baseCurrency() {
@@ -23,6 +34,10 @@ export default class Market {
 
     get symbol() {
       return this.market.symbol;
+    }
+
+    isActive() {
+      return this.market.active;
     }
 
     opposite(currency: string) {
