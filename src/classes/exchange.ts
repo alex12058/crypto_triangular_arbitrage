@@ -87,6 +87,7 @@ export default class Exchange {
       return this;
     }
 
+    // TODO: Make a sub function of loadConfiguration() which also has details about rate limiting
     private async loadAPIKeys() {
       const { name } = this.exchange;
       await doAndLog(`Retrieving API keys for ${name}`, () => {
