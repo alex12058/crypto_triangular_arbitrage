@@ -1,3 +1,4 @@
+import Exchange from "./classes/exchange";
 
 export function contains<T>(objectArray: T[], search: T): boolean {
   return objectArray.some((object) => object === search);
@@ -59,4 +60,16 @@ export function assert(value: any, message:string) {
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function request<T>(callback: () => Promise<T>): Promise<T> {
+  let toReturn: any;
+  for(let i = 0; i < Exchange.NUM_RETRY_ATTEMPTS; i++) {
+    await callback().then((value: any) => {
+      toReturn = value;
+    }).catch(_ignore_error => {});
+    if (toReturn) return toReturn;
+    await sleep(Exchange.RETRY_DELAY_MS);
+  }
+  throw new Error('Too many attempts');
 }

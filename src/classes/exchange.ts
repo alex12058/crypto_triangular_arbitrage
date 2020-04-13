@@ -1,7 +1,7 @@
 
 import Market from './market';
 import ChainBuilder from '../chain_builder';
-import { unique, doAndLog, assert } from '../helper';
+import { unique, doAndLog, assert, request } from '../helper';
 import Chain from './chain';
 import Currency from './currency';
 
@@ -29,10 +29,20 @@ export default class Exchange {
 
     private apiKeyAdded = false;
 
+    public static readonly RETRY_DELAY_MS = 1000;
+
+    public static readonly NUM_RETRY_ATTEMPTS = 3;
+
     constructor(name: string) {
       this.exchange = new (ccxt as any)[name]({ enableRateLimit: true });
       this.checkExchangeHasMethods();
       this._chainBuilder = new ChainBuilder(this);
+    }
+
+    setMaxRequestsPerSecond(maxRequestsPerSecond: number) {
+      const millisBetweenRequests = Math.round(1000 / maxRequestsPerSecond);
+      this.exchange.rateLimit = millisBetweenRequests;
+      return this;
     }
 
     private checkExchangeHasMethods() {
@@ -71,8 +81,8 @@ export default class Exchange {
       await this.loadAPIKeys();
       await this.loadMarketsAndCurrencies();
       await this.createChains();
-      await this.terminateIfNoAPIKey();
       await this.loadOrderBooks();
+      await this.terminateIfNoAPIKey();
       await this.loadBalances();
       return this;
     }
@@ -99,7 +109,7 @@ export default class Exchange {
       this._markets.clear();
 
       await doAndLog('Refreshing market data', async () => {
-        await this.exchange.loadMarkets(true);
+        await request(async () => this.exchange.loadMarkets(true));
       });
 
       await doAndLog('Indexing markets', () => {
@@ -158,7 +168,7 @@ export default class Exchange {
 
     private async loadBalances() {
       await doAndLog('Loading balances', async () => {
-        const balances = await this.exchange.fetchBalance();
+        const balances = await request(this.exchange.fetchBalance);
         this._currencies.forEach((currency, key) => currency.updateBalance(balances[key]));
       });
     }

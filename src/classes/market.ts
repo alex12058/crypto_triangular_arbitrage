@@ -1,5 +1,5 @@
 import Exchange from './exchange';
-import { contains } from '../helper';
+import { contains, request } from '../helper';
 
 import ccxt = require('ccxt');
 
@@ -16,7 +16,7 @@ export default class Market {
     }
 
     async initialize() {
-      this.orderBook = await this.fetchOrderBook();
+      this.orderBook = await request(this.fetchOrderBook);
       return this;
     }
 
