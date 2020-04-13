@@ -158,7 +158,7 @@ export default class Exchange {
       }
 
       while(finished.some(finishedState => !finishedState)) {
-        await doAndLog('Loading order books', async() => {
+        await doAndLog('Loading order book', async() => {
           const notCompleted = racePromises.filter((_value, index) => !finished[index]);
           const result = await Promise.race(notCompleted);
           const completedLength = activeMarkets.length - (notCompleted.length - 1);
