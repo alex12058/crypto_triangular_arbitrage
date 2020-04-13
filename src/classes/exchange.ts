@@ -69,6 +69,14 @@ export default class Exchange {
       return new Map(this._markets);
     }
 
+    get activeMarkets() {
+      const activeMarkets = new Map<string, Market>();
+      Array.from(this._markets.values()).forEach(market => {
+        if (market.isActive) activeMarkets.set(market.symbol, market);
+      });
+      return activeMarkets;
+    }
+
     get getMarketsArray() {
       return Array.from(this._markets.values()).slice();
     }
