@@ -6,6 +6,7 @@ async function main() {
 		connectingCurrency: 'BTC',
 		valueCurrency: 'USDT'
 	}).initialize();
-	binance.printPriceTable();
+	//binance.printPriceTable();
+	binance.printChainCycleTests(true);
 }
 main();

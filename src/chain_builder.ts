@@ -16,7 +16,7 @@ interface ChainBuildState {
 export default class ChainBuilder {
   private readonly exchange: Exchange;
 
-  private readonly MAX_CHAIN_LENGTH = 3;
+  private readonly MAX_CHAIN_LENGTH = 4;
 
   constructor(exchange: Exchange) {
     this.exchange = exchange;

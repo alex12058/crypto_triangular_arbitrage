@@ -30,7 +30,7 @@ interface Fee {
  }
 
 
-interface OrderBase {
+export interface OrderBase {
 	symbol: Market;
 	type: OrderType;
 	side: OrderSide;
@@ -48,12 +48,13 @@ export interface Order extends OrderBase {
 }
 
 export class OrderSimulator{
-	static execute(order: OrderBase): Order | undefined {
+	static execute(order: OrderBase): Order {
 		const market = order.symbol.market;
 		if (order.type === OrderType.LIMIT) {
 			assert(order.price, 'Limit order must have price');
 		}
-		this.checkOrderWithinLimits(order);
+		// Throws if orders not within limits
+		this.orderWithinLimits(order, true);
 
 		const orderbook = order.symbol.orderBook;
 		const side = order.side === OrderSide.BUY
@@ -111,15 +112,31 @@ export class OrderSimulator{
 		}
 	}
 
-	private static checkOrderWithinLimits(order: OrderBase) {
+	static orderWithinLimits(order: OrderBase, can_throw = false) {
+		const maybe_throw = (message: string) => {
+			if (can_throw) throw new Error(message);
+		}
 		const limits = order.symbol.market.limits;
 		if (order.type === OrderType.LIMIT) {
 			const priceLimits = limits.price;
-			assert(order.price! >= priceLimits.min, 'Price must be above minimum limit');
-			if (priceLimits.max) assert(order.price! <= priceLimits.max, 'Price must be below maximum limit') 
+			if (order.price! < priceLimits.min) {
+				maybe_throw('Price must be above minimum limit');
+				return false;
+			}
+			if (priceLimits.max && order.price! > priceLimits.max) {
+				maybe_throw('Price must be below maximum limit');
+				return false;
+			}
 		}
 		const amountLimits = limits.amount;
-		assert(order.amount >= amountLimits.min, 'Order amount must be above minimum limit');
-		if (amountLimits.max) assert(order.amount <= amountLimits.max, 'Order amount must be below maximum limit')
+		if (order.amount < amountLimits.min) {
+			maybe_throw('Order amount must be above minimum limit');
+			return false;
+		}
+		if (amountLimits.max && order.amount > amountLimits.max) {
+			maybe_throw('Order amount must be below maximum limit');
+			return false;
+		}
+		return true;
 	}
 }

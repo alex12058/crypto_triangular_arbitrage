@@ -47,10 +47,22 @@ export default class Market {
 		return best[0];
 	}
 
+	get bestAskInValueCurrency() {
+		const bestAsk = this.bestAsk;
+		if (!bestAsk) return undefined;
+		return this.convertPrice(bestAsk);
+	}
+
 	get bestBid() {
 		const best = this._orderBook.bids[0];
 		if (!best) return undefined;
 		return best[0];
+	}
+
+	get bestBidInValueCurrenct() {
+		const best_bid = this.bestBid;
+		if (!best_bid) return undefined;
+		return this.convertPrice(best_bid);
 	}
 
 	get midMarketPrice() {

@@ -123,8 +123,23 @@ export default class Exchange {
 			});
 			table[currency.code] = row;
 		});
-		console.log('\nMid market prices:')
+		console.log('\nMid market prices:');
 		console.table(table);
+	}
+
+	printChainCycleTests(onlyProfitable: boolean) {
+		const table: any = {};
+		this._chains.forEach(chain => {
+			const results = chain.simulateChainCycle(100);
+			if (!onlyProfitable 
+				|| (results.fowards > 0 || results.backwards > 0)) {
+				results.fowards = round(results.fowards, 2)
+				results.backwards = round(results.backwards, 2);
+				table[chain.hash] = results;
+			}
+		});
+		console.log(`\nChain cycle tests:`);
+		console.table(table)
 	}
 
 	private async loadExchangeConfiguration() {
