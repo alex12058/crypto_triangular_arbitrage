@@ -1,4 +1,4 @@
-# GTS Crypto Arbitrage
+# Crypto Triangular Arbitrage
 
 A triangular arbitrage detection and simulation tool for cryptocurrency exchanges built with TypeScript.
 
@@ -61,6 +61,7 @@ export BINANCE_API_SECRET="your_secret_here"
 ```
 
 Or create a `.env` file (add to `.gitignore`):
+
 ```
 BINANCE_API_KEY=your_api_key_here
 BINANCE_API_SECRET=your_secret_here
@@ -69,6 +70,7 @@ BINANCE_API_SECRET=your_secret_here
 ## What is Triangular Arbitrage?
 
 Triangular arbitrage involves trading through three currency pairs to exploit pricing inefficiencies. For example:
+
 1. BTC → ETH
 2. ETH → USDT
 3. USDT → BTC
@@ -116,11 +118,13 @@ AAVE/USDT/ETH/USDC,-1.08,0.55
 **Interpretation:**
 
 - **Key**: The arbitrage chain path (e.g., `ETH/USDT/USDC`)
+
   - Start with ETH → Trade to USDT → Trade to USDC → Trade back to ETH
   - For 3-hop chains: A → B → C → A
   - For 4-hop chains: A → B → C → D → A
 
 - **forwards**: Profit/loss starting with $100 going forward through the chain
+
   - `0.65` = +$0.65 profit (0.65% return)
   - `-0.64` = -$0.64 loss
 
@@ -128,6 +132,7 @@ AAVE/USDT/ETH/USDC,-1.08,0.55
   - Some chains are profitable in one direction but not the other
 
 **Real-world considerations:**
+
 - Most results show losses due to trading fees and spreads
 - Positive values indicate theoretical arbitrage opportunities
 - In practice, opportunities disappear quickly due to:
@@ -139,17 +144,18 @@ AAVE/USDT/ETH/USDC,-1.08,0.55
 ## Configuration Options
 
 ```typescript
-const exchange = await new Exchange({ 
-  name: 'binance',              // Exchange name (from CCXT)
-  connectingCurrency: 'BTC',    // Main trading pair currency
-  valueCurrency: 'USDT',        // Currency to value results in
-  minVolumeUSD: 50000           // Min 24h volume filter (optional)
+const exchange = await new Exchange({
+  name: "binance", // Exchange name (from CCXT)
+  connectingCurrency: "BTC", // Main trading pair currency
+  valueCurrency: "USDT", // Currency to value results in
+  minVolumeUSD: 50000, // Min 24h volume filter (optional)
 })
-.setMaxRequestsPerSecond(5)     // Rate limiting
-.initialize();
+  .setMaxRequestsPerSecond(5) // Rate limiting
+  .initialize();
 ```
 
 **Performance Tips:**
+
 - Increase `minVolumeUSD` to reduce the number of markets analyzed
 - Adjust `setMaxRequestsPerSecond()` based on exchange limits
 - Chain length is fixed at 4 hops maximum
@@ -157,7 +163,7 @@ const exchange = await new Exchange({
 ## Project Structure
 
 ```
-gts-crypto-arbitrage/
+crypto-triangular-arbitrage/
 ├── src/
 │   ├── index.ts              # Main entry point
 │   ├── chain_builder.ts      # Builds arbitrage chains
@@ -174,28 +180,33 @@ gts-crypto-arbitrage/
 ## Configuration
 
 The bot can be configured with:
+
 - **Exchange name**: Which exchange to monitor (e.g., 'binance')
 - **Connecting currency**: The intermediate currency (e.g., 'BTC')
 - **Value currency**: The base currency for profit calculation (e.g., 'USDT')
 
 Example configuration in `index.ts`:
+
 ```typescript
-const binance = await new Exchange({ 
-    name: 'binance', 
-    connectingCurrency: 'BTC',
-    valueCurrency: 'USDT'
+const binance = await new Exchange({
+  name: "binance",
+  connectingCurrency: "BTC",
+  valueCurrency: "USDT",
 }).initialize();
 ```
 
 ## Key Components
 
 ### Exchange Class
+
 Handles connection to exchanges, retrieves market data, and executes trades.
 
 ### Chain Class
+
 Represents a triangular arbitrage opportunity and calculates potential profits.
 
 ### Order Simulator
+
 Simulates order execution to estimate actual profits after fees and slippage.
 
 ## How It Works
@@ -209,6 +220,7 @@ Simulates order execution to estimate actual profits after fees and slippage.
 ## Risk Considerations
 
 ⚠️ **IMPORTANT**:
+
 - **Execution Speed**: Arbitrage opportunities can disappear in milliseconds
 - **Trading Fees**: Must account for exchange fees on all three trades
 - **Slippage**: Market orders may execute at worse prices than expected

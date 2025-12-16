@@ -1,8 +1,8 @@
 {
-    "eslint.enable": true,
-    "editor.insertSpaces": false,
-    "editor.tabSize": 4,
-    "editor.detectIndentation": true,
-    "debug.node.autoAttach": "on",
-    "debug.console.wordWrap": false
+  "eslint.enable": true,
+  "editor.insertSpaces": false,
+  "editor.tabSize": 4,
+  "editor.detectIndentation": true,
+  "debug.node.autoAttach": "on",
+  "debug.console.wordWrap": false
 }

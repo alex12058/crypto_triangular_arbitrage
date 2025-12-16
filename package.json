@@ -1,7 +1,7 @@
 {
-  "name": "gts-crypto-arbitrage",
+  "name": "crypto-triangular-arbitrage",
   "version": "2.0.0",
-  "description": "Automates triangular arbitrage on crypto exchanges - Modernized 2025",
+  "description": "Triangular arbitrage detection and simulation tool for cryptocurrency exchanges",
   "repository": "https://github.com/alex12058/gts_triangular_arbitrage",
   "main": "build/src/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "clean": "rm -rf build",
     "compile": "tsc -p .",
     "fix": "eslint --fix src/**/*.ts",
-    "format": "prettier --write 'src/**/*.ts'",
+    "format": "prettier --write .",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run check",
