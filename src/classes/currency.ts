@@ -1,13 +1,13 @@
 import Exchange from './exchange';
 
-import ccxt from 'ccxt';
+import ccxt, { type Currency as CCXTCurrency } from 'ccxt';
 import Market from './market';
 import { assert } from '../helper';
 
 export default class Currency {
 	private readonly exchange: Exchange;
 
-	private readonly currency: ccxt.Currency;
+	private readonly currency: CCXTCurrency;
 
 	readonly markets: Map<string, Market> = new Map();
 
@@ -15,7 +15,7 @@ export default class Currency {
 
 	private used: number = 0;
 
-	constructor(exchange: Exchange, currency: ccxt.Currency) {
+	constructor(exchange: Exchange, currency: CCXTCurrency) {
 		this.exchange = exchange;
 		this.currency = currency;
 	}
@@ -29,7 +29,7 @@ export default class Currency {
 	}
 
 	get code() {
-		return this.currency.code;
+		return this.currency?.code!;
 	}
 
 	priceIsDeterminable() {

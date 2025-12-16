@@ -1,17 +1,17 @@
 import Exchange from './exchange';
 import { contains, request } from '../helper';
 
-import ccxt from 'ccxt';
+import ccxt, { type Market as CCXTMarket, type OrderBook } from 'ccxt';
 import { OrderSide, OrderType, OrderSimulator } from './order_simulator';
 
 export default class Market {
 	private readonly exchange: Exchange;
 
-	readonly market: ccxt.Market;
+	readonly market: CCXTMarket;
 
-	private _orderBook!: ccxt.OrderBook;
+	private _orderBook!: OrderBook;
 
-	constructor(exchange: Exchange, market: ccxt.Market) {
+	constructor(exchange: Exchange, market: CCXTMarket) {
 		this.exchange = exchange;
 		this.market = market;
 	}
@@ -26,19 +26,19 @@ export default class Market {
 	}
 
 	get baseCurrency() {
-		return this.market.base;
+		return this.market?.base!;
 	}
 
 	get quoteCurrency() {
-		return this.market.quote;
+		return this.market?.quote!;
 	}
 
 	get symbol() {
-		return this.market.symbol;
+		return this.market?.symbol!;
 	}
 
 	get orderBook() {
-		return {...this._orderBook} as ccxt.OrderBook;
+		return {...this._orderBook} as OrderBook;
 	}
 
 	get bestAsk() {

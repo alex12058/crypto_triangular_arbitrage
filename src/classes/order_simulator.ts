@@ -67,6 +67,7 @@ export class OrderSimulator{
 		for (const level of side) {
 			if (!remaining) break;
 			const price = level[0];
+			if (!price) continue;
 			if (order.type === OrderType.LIMIT) {
 				if (
 					order.side === OrderSide.BUY
@@ -76,9 +77,10 @@ export class OrderSimulator{
 				) break;
 			}
 			const quantity = level[1];
+			if (!quantity) continue;
 			
 			const amount = Math.min(remaining, quantity);
-			const trade: Trade = { amount, price};
+			const trade: Trade = { amount, price };
 			trades.push(trade);
 			remaining -= trade.amount;
 			filled += trade.amount;
@@ -94,7 +96,7 @@ export class OrderSimulator{
 			? cost / filled
 			: 0;
 
-		const takerFee = market.taker;
+		const takerFee = market?.taker || 0;
 		// CCXT v4: taker fee is always a decimal percentage (e.g., 0.001 = 0.1%)
 		const fee = cost * takerFee;
 
@@ -113,24 +115,26 @@ export class OrderSimulator{
 		const maybe_throw = (message: string) => {
 			if (can_throw) throw new Error(message);
 		}
-		const limits = order.symbol.market.limits;
+		const limits = order.symbol.market?.limits;
+		if (!limits) return true;
+		
 		if (order.type === OrderType.LIMIT) {
 			const priceLimits = limits.price;
-			if (order.price! < priceLimits.min) {
+			if (priceLimits && priceLimits.min && order.price! < priceLimits.min) {
 				maybe_throw('Price must be above minimum limit');
 				return false;
 			}
-			if (priceLimits.max && order.price! > priceLimits.max) {
+			if (priceLimits && priceLimits.max && order.price! > priceLimits.max) {
 				maybe_throw('Price must be below maximum limit');
 				return false;
 			}
 		}
 		const amountLimits = limits.amount;
-		if (order.amount < amountLimits.min) {
+		if (amountLimits && amountLimits.min && order.amount < amountLimits.min) {
 			maybe_throw('Order amount must be above minimum limit');
 			return false;
 		}
-		if (amountLimits.max && order.amount > amountLimits.max) {
+		if (amountLimits && amountLimits.max && order.amount > amountLimits.max) {
 			maybe_throw('Order amount must be below maximum limit');
 			return false;
 		}

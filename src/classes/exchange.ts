@@ -5,7 +5,7 @@ import { unique, doAndLog, assert, request, round } from '../helper';
 import Chain from './chain';
 import Currency from './currency';
 
-import ccxt from 'ccxt';
+import ccxt, { type Exchange as CCXTExchange, type Currency as CCXTCurrency, type Market as CCXTMarket } from 'ccxt';
 
 interface ExchangeConfig{
 	rateLimit?: number;
@@ -37,7 +37,7 @@ interface ExchangeConstructorParams {
 }
 
 export default class Exchange {
-	readonly exchange: ccxt.Exchange;
+	readonly exchange: CCXTExchange;
 
 	/** Currency used to determine price relations between currencies */
 	readonly connectingCurrency: string;
@@ -141,10 +141,10 @@ export default class Exchange {
 
 	private async loadExchangeConfiguration() {
 		const { name } = this.exchange;
-		await doAndLog(`Loading config for ${name}`, () => {
+		await doAndLog(`Loading config for ${name || 'exchange'}`, () => {
 			// Try to load from environment variables (e.g., BINANCE_API_KEY, BINANCE_API_SECRET)
-			const envKeyName = `${name.toUpperCase()}_API_KEY`;
-			const envSecretName = `${name.toUpperCase()}_API_SECRET`;
+			const envKeyName = `${(name || '').toUpperCase()}_API_KEY`;
+			const envSecretName = `${(name || '').toUpperCase()}_API_SECRET`;
 			const apiKey = process.env[envKeyName];
 			const apiSecret = process.env[envSecretName];
 
@@ -168,15 +168,17 @@ export default class Exchange {
 
 		await doAndLog('Indexing currencies', () => {
 			// Create currencies
-			Object.values(this.exchange.currencies).forEach((currency: ccxt.Currency) => {
-				this.currencies.set(currency.code, new Currency(this, currency));
+			Object.values(this.exchange.currencies).forEach((currency: CCXTCurrency) => {
+				if (currency && currency.code) {
+					this.currencies.set(currency.code, new Currency(this, currency));
+				}
 			});
 			return `${this.currencies.size} loaded`;
 		});
 
 		await doAndLog('Indexing markets', () => {
-			Object.values(this.exchange.markets).forEach((market: ccxt.Market) => {
-				if (market.active) {
+			Object.values(this.exchange.markets).forEach((market: CCXTMarket) => {
+				if (market && market.active) {
 					const newMarket = new Market(this, market);
 					this.markets.set(market.symbol, newMarket);
 					this.currencies.get(newMarket.baseCurrency)?.addMarket(newMarket);
