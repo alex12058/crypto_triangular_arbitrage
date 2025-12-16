@@ -95,11 +95,8 @@ export class OrderSimulator{
 			: 0;
 
 		const takerFee = market.taker;
-		const percentage = market.percentage; // Indicated if takerFee is flat or percentage
-
-		const fee = percentage
-			? cost * takerFee
-			: takerFee;
+		// CCXT v4: taker fee is always a decimal percentage (e.g., 0.001 = 0.1%)
+		const fee = cost * takerFee;
 
 		return {
 			...order,

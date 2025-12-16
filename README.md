@@ -6,6 +6,58 @@
 
 A triangular arbitrage detection and simulation tool for cryptocurrency exchanges built with TypeScript.
 
+## 2025 Modernization Update
+
+This project has been updated to work with current dependencies:
+
+- **TypeScript 5.7** - Modern TypeScript with latest features
+- **CCXT 4.4** - Updated to latest exchange API library
+- **Node.js 18+** - Requires modern Node.js LTS
+- **Updated tooling** - ESLint 9, GTS 5, latest development tools
+
+### API Key Setup (Optional)
+
+For **public market data** (monitoring/simulation mode), **no API keys are required**.
+
+For **authenticated features** (if you add real trading later), use environment variables:
+
+```bash
+export BINANCE_API_KEY="your_api_key_here"
+export BINANCE_API_SECRET="your_secret_here"
+```
+
+Or create a `.env` file (add to `.gitignore`):
+```
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_secret_here
+```
+
+### Installation & Usage (Updated)
+
+```bash
+# Install dependencies (Node.js 18+ required)
+npm install
+
+# Run in development mode
+npm start
+
+# Compile TypeScript
+npm run compile
+
+# Check code style
+npm run check
+
+# Auto-fix style issues
+npm run fix
+```
+
+### Breaking Changes from Original
+
+- Removed `src/exchange_configs.json` - API keys now via environment variables only
+- Updated all dependencies to 2025 versions
+- CCXT v4 API compatibility (fee structure changes)
+- Modern TypeScript 5.x features and strict mode
+
 ## ⚠️ IMPORTANT DISCLAIMERS
 
 **Status**: Simulation only - Does not execute actual trades
@@ -43,53 +95,17 @@ If the exchange rates create a profitable cycle, trades could theoretically be e
 
 ## Technology Stack
 
-- **Language**: TypeScript 3.7
-- **Runtime**: Node.js
-- **Exchange API**: CCXT 1.25
+- **Language**: TypeScript 5.7
+- **Runtime**: Node.js 18+
+- **Exchange API**: CCXT 4.4
 - **Code Style**: Google TypeScript Style (GTS)
 - **Dev Tools**: Nodemon for hot-reload
 
 ## Prerequisites
 
-- Node.js (v10 or higher)
+- Node.js (v18 or higher)
 - npm
-- Exchange API credentials (for live trading)
-
-## Installation
-
-```bash
-# Install dependencies
-npm install
-```
-
-## Usage
-
-### Development Mode
-
-```bash
-# Run with auto-reload on changes
-npm start
-```
-
-### Build
-
-```bash
-# Compile TypeScript to JavaScript
-npm run compile
-```
-
-### Code Quality
-
-```bash
-# Check code style
-npm run check
-
-# Auto-fix style issues
-npm run fix
-
-# Clean build artifacts
-npm run clean
-```
+- Exchange API credentials (optional, only for authenticated features)
 
 ## Project Structure
 

@@ -1,6 +1,6 @@
 import Exchange from './exchange';
 
-import ccxt = require('ccxt');
+import ccxt from 'ccxt';
 import Market from './market';
 import { assert } from '../helper';
 

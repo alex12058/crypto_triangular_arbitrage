@@ -5,22 +5,19 @@ import { unique, doAndLog, assert, request, round } from '../helper';
 import Chain from './chain';
 import Currency from './currency';
 
-import ccxt = require('ccxt');
-import { stringify } from 'querystring';
+import ccxt from 'ccxt';
 
 interface ExchangeConfig{
 	rateLimit?: number;
-	apiKey: string;
-	secret: string;
+	apiKey?: string;
+	secret?: string;
 }
 
 function isExchangeConfig(exchangeConfig: ExchangeConfig) {
-	return typeof exchangeConfig.apiKey === 'string'
-		&& typeof exchangeConfig.secret === 'string'
-		&& !exchangeConfig.rateLimit || typeof exchangeConfig.rateLimit === 'number';
+	return (!exchangeConfig.apiKey || typeof exchangeConfig.apiKey === 'string')
+		&& (!exchangeConfig.secret || typeof exchangeConfig.secret === 'string')
+		&& (!exchangeConfig.rateLimit || typeof exchangeConfig.rateLimit === 'number');
 }
-
-const exchangeConfigs = require('../exchange_configs.json');
 
 /**
  * The configuration takes the name of the exchange and the names of two currencies.
@@ -144,24 +141,21 @@ export default class Exchange {
 
 	private async loadExchangeConfiguration() {
 		const { name } = this.exchange;
-		let loaded = false;
 		await doAndLog(`Loading config for ${name}`, () => {
-			const exchangeConfig: ExchangeConfig | undefined = (exchangeConfigs as any)[name.toLowerCase()];
-			if (exchangeConfig) {
-				if (!isExchangeConfig(exchangeConfig)) return 'invalid config';
-				const exchange = this.exchange;
-				exchange.apiKey = exchangeConfig.apiKey;
-				exchange.secret = exchangeConfig.secret;
-				if (exchangeConfig.rateLimit) this.setMaxRequestsPerSecond(exchangeConfig.rateLimit);
-				loaded = true;
-				return 'success';
+			// Try to load from environment variables (e.g., BINANCE_API_KEY, BINANCE_API_SECRET)
+			const envKeyName = `${name.toUpperCase()}_API_KEY`;
+			const envSecretName = `${name.toUpperCase()}_API_SECRET`;
+			const apiKey = process.env[envKeyName];
+			const apiSecret = process.env[envSecretName];
+
+			if (apiKey && apiSecret) {
+				this.exchange.apiKey = apiKey;
+				this.exchange.secret = apiSecret;
+				return 'loaded from environment';
 			}
-			return 'no config found'
+			// No credentials found - will run in public API mode (no authentication)
+			return 'public mode (no credentials)';
 		});
-		if (!loaded) {
-			console.log('Load sequence aborted.')
-			process.exit(0);
-		}
 		return this;
 	}
 

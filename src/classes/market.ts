@@ -1,7 +1,7 @@
 import Exchange from './exchange';
 import { contains, request } from '../helper';
 
-import ccxt = require('ccxt');
+import ccxt from 'ccxt';
 import { OrderSide, OrderType, OrderSimulator } from './order_simulator';
 
 export default class Market {

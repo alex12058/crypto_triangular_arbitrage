@@ -1,6 +1,6 @@
 import Exchange from "./classes/exchange";
 
-import ccxt = require('ccxt');
+import ccxt from 'ccxt';
 
 export function contains<T>(objectArray: T[], search: T): boolean {
 	return objectArray.some((object) => object === search);
