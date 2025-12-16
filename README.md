@@ -1,38 +1,36 @@
 # GTS Crypto Arbitrage
 
-> **⚠️ ARCHIVED PROJECT - FOR EDUCATIONAL PURPOSES ONLY**
-> 
-> This is a historical project from ~2020 and is **no longer maintained**. Exchange APIs and market conditions have changed significantly. This code is provided as-is for educational purposes to demonstrate arbitrage detection algorithms and TypeScript patterns.
-
 A triangular arbitrage detection and simulation tool for cryptocurrency exchanges built with TypeScript.
 
-## 2025 Modernization Update
+## Overview
 
-This project has been updated to work with current dependencies:
+This tool identifies triangular arbitrage opportunities on cryptocurrency exchanges and simulates potential profits. Triangular arbitrage exploits price discrepancies between three trading pairs on the same exchange.
 
-- **TypeScript 5.7** - Modern TypeScript with latest features
-- **CCXT 4.4** - Updated to latest exchange API library
-- **Node.js 18+** - Requires modern Node.js LTS
-- **Updated tooling** - ESLint 9, GTS 5, latest development tools
+**Important**: This is a simulation and analysis tool. It does not execute actual trades - it only calculates and displays potential arbitrage opportunities.
 
-### API Key Setup (Optional)
+## ⚠️ IMPORTANT DISCLAIMERS
 
-For **public market data** (monitoring/simulation mode), **no API keys are required**.
+- 📚 **Educational/Research purposes only** - Study arbitrage detection algorithms
+- 🚫 **Simulation only** - No actual trading implementation
+- ⚠️ **Real arbitrage is complex** - Requires speed, capital, and often fails due to fees/slippage
+- 📋 **No warranty** - Use at your own risk
+- 💡 **Theoretical profits ≠ Real profits** - Simulations don't account for execution risks
 
-For **authenticated features** (if you add real trading later), use environment variables:
+## Prerequisites
 
-```bash
-export BINANCE_API_KEY="your_api_key_here"
-export BINANCE_API_SECRET="your_secret_here"
-```
+- Node.js (v18 or higher)
+- npm
+- Exchange API credentials (optional, only for authenticated features)
 
-Or create a `.env` file (add to `.gitignore`):
-```
-BINANCE_API_KEY=your_api_key_here
-BINANCE_API_SECRET=your_secret_here
-```
+## Technology Stack
 
-### Installation & Usage (Updated)
+- **Language**: TypeScript 5.7
+- **Runtime**: Node.js 18+
+- **Exchange API**: CCXT 4.4
+- **Code Quality**: ESLint 9 with TypeScript support
+- **Dev Tools**: Nodemon for hot-reload
+
+## Installation & Usage
 
 ```bash
 # Install dependencies (Node.js 18+ required)
@@ -51,34 +49,22 @@ npm run check
 npm run fix
 ```
 
-### Breaking Changes from Original
+### API Key Setup (Optional)
 
-- Removed `src/exchange_configs.json` - API keys now via environment variables only
-- Removed GTS (Google TypeScript Style) - Using standard ESLint 9 with TypeScript support
-- Updated all dependencies to 2025 versions
-- CCXT v4 API compatibility (fee structure changes)
-- Modern TypeScript 5.x features and strict mode
+For **public market data** (monitoring/simulation mode), **no API keys are required**.
 
-### Known Issues
+For **authenticated features** (if you add real trading later), use environment variables:
 
-- **Network Access**: Some sandbox/restricted environments may block access to exchange APIs (Binance, etc.). The tool will show network errors in such cases. Run in an environment with internet access for full functionality.
+```bash
+export BINANCE_API_KEY="your_api_key_here"
+export BINANCE_API_SECRET="your_secret_here"
+```
 
-## ⚠️ IMPORTANT DISCLAIMERS
-
-**Status**: Simulation only - Does not execute actual trades
-
-- 📚 **Educational/Research purposes only** - Study the algorithms and logic
-- 🚫 **Simulation only** - No actual trading implementation
-- ⚠️ **Real arbitrage is complex** - Requires speed, capital, and often fails due to fees/slippage
-- 🕰️ **APIs may be outdated** - CCXT and exchange APIs have evolved since 2020
-- 📋 **No warranty** - See LICENSE file for full disclaimer
-- 💡 **Theoretical profits ≠ Real profits** - Simulations don't account for execution risks
-
-## Overview
-
-This tool identifies triangular arbitrage opportunities on cryptocurrency exchanges and simulates potential profits. Triangular arbitrage exploits price discrepancies between three trading pairs on the same exchange.
-
-**Important**: This is a simulation and analysis tool. It does not execute actual trades - it only calculates and displays potential arbitrage opportunities.
+Or create a `.env` file (add to `.gitignore`):
+```
+BINANCE_API_KEY=your_api_key_here
+BINANCE_API_SECRET=your_secret_here
+```
 
 ## What is Triangular Arbitrage?
 
@@ -98,19 +84,75 @@ If the exchange rates create a profitable cycle, trades could theoretically be e
 - Price table visualization
 - Configurable connecting and value currencies
 
-## Technology Stack
+## Example Output
 
-- **Language**: TypeScript 5.7
-- **Runtime**: Node.js 18+
-- **Exchange API**: CCXT 4.4
-- **Code Quality**: ESLint 9 with TypeScript support
-- **Dev Tools**: Nodemon for hot-reload
+### Console Log During Execution
 
-## Prerequisites
+```
+Loading config for Binance...... [public mode (no credentials)] | 2ms
+Refreshing market data......................................... | 651ms
+Fetching market volumes.................. [3449 tickers loaded] | 584ms
+Indexing currencies............................... [912 loaded] | <1ms
+Indexing markets........ [1742 loaded (504 filtered by volume)] | 3ms
+Determining quote currencies..................... [20 detected] | <1ms
+Removing bad quote currencies...................... [5 deleted] | 1ms
+Processing quote 1/17..... [USDT: 589866 chains (589866 total)] | 3213ms
+Processing quote 2/17........ [TUSD: 196 chains (590062 total)] | 2899ms
+  ...
+Chain cycle tests saved to chain_cycle_tests.csv
+Price table saved to price_table.csv
+```
 
-- Node.js (v18 or higher)
-- npm
-- Exchange API credentials (optional, only for authenticated features)
+### chain_cycle_tests.csv Results
+
+```csv
+Key,fowards,backwards
+ETH/USDT/USDC,0.65,-0.64
+ETH/USDT/ZEC/USDC,0.61,-0.72
+BTC/USDT/ETH/USDC,-0.45,0.32
+AAVE/USDT/ETH/USDC,-1.08,0.55
+```
+
+**Interpretation:**
+
+- **Key**: The arbitrage chain path (e.g., `ETH/USDT/USDC`)
+  - Start with ETH → Trade to USDT → Trade to USDC → Trade back to ETH
+  - For 3-hop chains: A → B → C → A
+  - For 4-hop chains: A → B → C → D → A
+
+- **forwards**: Profit/loss starting with $100 going forward through the chain
+  - `0.65` = +$0.65 profit (0.65% return)
+  - `-0.64` = -$0.64 loss
+
+- **backwards**: Profit/loss going through chain in reverse
+  - Some chains are profitable in one direction but not the other
+
+**Real-world considerations:**
+- Most results show losses due to trading fees and spreads
+- Positive values indicate theoretical arbitrage opportunities
+- In practice, opportunities disappear quickly due to:
+  - High-frequency trading bots
+  - Network latency
+  - Order book depth changes
+  - Exchange fees (not all fees modeled here)
+
+## Configuration Options
+
+```typescript
+const exchange = await new Exchange({ 
+  name: 'binance',              // Exchange name (from CCXT)
+  connectingCurrency: 'BTC',    // Main trading pair currency
+  valueCurrency: 'USDT',        // Currency to value results in
+  minVolumeUSD: 50000           // Min 24h volume filter (optional)
+})
+.setMaxRequestsPerSecond(5)     // Rate limiting
+.initialize();
+```
+
+**Performance Tips:**
+- Increase `minVolumeUSD` to reduce the number of markets analyzed
+- Adjust `setMaxRequestsPerSecond()` based on exchange limits
+- Chain length is fixed at 4 hops maximum
 
 ## Project Structure
 
@@ -173,27 +215,8 @@ Simulates order execution to estimate actual profits after fees and slippage.
 - **API Latency**: Network delays can eliminate arbitrage profits
 - **Market Risk**: Prices can move against you during execution
 
-## Development Notes
+## Why Arbitrage is Difficult in Practice
 
-- Uses Google TypeScript Style (GTS) for consistent code formatting
-- Nodemon provides hot-reload during development
-- ESLint with Airbnb base configuration for code quality
-- TypeScript for type safety and better IDE support
-
-## License
-
-This project is licensed under the MIT License with additional trading disclaimers - see the [LICENSE](LICENSE) file for details.
-
-## Archive Notice
-
-This project is archived and unmaintained. It represents a snapshot of arbitrage detection logic from ~2020. The code is preserved for educational purposes to demonstrate:
-- Triangular arbitrage detection algorithms
-- Chain building and cycle detection
-- CCXT library integration patterns
-- TypeScript financial calculations
-- Order simulation logic
-
-**Why arbitrage is difficult in practice**:
 - High-frequency traders dominate with microsecond execution
 - Exchange fees often eliminate theoretical profits
 - Slippage and order book depth affect real execution
@@ -201,31 +224,15 @@ This project is archived and unmaintained. It represents a snapshot of arbitrage
 - Capital requirements can be substantial
 - Opportunities disappear within milliseconds
 
-**For modern projects**, consider:
-- Current CCXT API versions and rate limits
-- WebSocket connections for real-time data
-- Order book depth analysis (not just ticker prices)
-- Realistic fee and slippage modeling
-- Regulatory compliance requirements
-- Paper trading before any real attempts
+The opportunities shown by this simulator are theoretical. Real arbitrage requires sophisticated infrastructure, significant capital, and often yields much smaller profits than simulations suggest.
 
-**Note**: The opportunities shown by this simulator are theoretical. Real arbitrage requires sophisticated infrastructure, significant capital, and often yields much smaller profits than simulations suggest.
+## Development
+
+- Nodemon provides hot-reload during development
+- ESLint with TypeScript support for code quality
+- TypeScript for type safety and better IDE support
 
 ## Acknowledgments
 
 - CCXT library for unified exchange APIs
 - TypeScript/Node.js community
-- Google TypeScript Style (GTS) for code formatting
-
-## License
-
-Private project
-
-## Notes
-
-This is a legacy project migrated from Bitbucket. Before using in production:
-- Update dependencies to latest versions
-- Implement proper error handling and recovery
-- Add comprehensive logging
-- Consider using websockets instead of REST API for faster updates
-- Implement circuit breakers and safety limits
